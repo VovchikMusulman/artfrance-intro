@@ -12,16 +12,27 @@
   </head>
   <body>
     <div class="atmosphere" aria-hidden="true">
+      <div class="streaks"></div>
       <div class="glow glow-a"></div>
       <div class="glow glow-b"></div>
-      <div class="grain"></div>
+      <div class="glow glow-c"></div>
+      <div class="grid-fade"></div>
     </div>
 
     <main class="app">
       <header class="topbar">
         <div class="brand-block">
-          <p class="brand">ART France</p>
-          <p class="brand-sub">Intro Studio</p>
+          <img
+            class="brand-mark"
+            src="assets/art-france-logo.svg"
+            width="40"
+            height="40"
+            alt="ART-France"
+          />
+          <div>
+            <p class="brand">ART-France</p>
+            <p class="brand-sub">Intro Tool</p>
+          </div>
         </div>
         <div class="status-pills" id="status-pills" aria-live="polite">
           <span class="pill" id="pill-ffmpeg" data-state="unknown">Движок</span>
@@ -30,8 +41,9 @@
       </header>
 
       <div class="hero">
+        <p class="eyebrow">&gt;&gt; Корпоративное видео</p>
         <h1 id="headline">Добавить интро</h1>
-        <p id="subtitle" class="subtitle">Одно действие — корпоративное начало у любого ролика</p>
+        <p id="subtitle" class="subtitle">Одно действие — фирменное начало у любого ролика</p>
       </div>
 
       <nav class="steps" aria-label="Этапы">
@@ -46,7 +58,7 @@
 
       <div class="stage">
         <section id="dropzone" class="panel dropzone is-visible" tabindex="0" role="button" aria-label="Выбрать видео">
-          <div class="frame-corners" aria-hidden="true"></div>
+          <div class="tech-corners" aria-hidden="true"></div>
           <div class="dropzone-inner">
             <div class="icon-ring">
               <svg width="28" height="28" viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -56,13 +68,17 @@
             </div>
             <p class="drop-title">Перетащите видео сюда</p>
             <p class="drop-hint">или нажмите · MP4, MOV, MKV, WEBM</p>
-            <button id="btn-browse" class="btn ghost compact" type="button">Выбрать файл</button>
+            <button id="btn-browse" class="btn secondary compact" type="button">
+              <span>Выбрать файл</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
         </section>
 
         <section id="file-panel" class="panel file-panel" hidden>
+          <div class="tech-corners" aria-hidden="true"></div>
           <div class="file-card">
-            <div class="file-glyph" aria-hidden="true">▶</div>
+            <div class="file-glyph" aria-hidden="true">&gt;&gt;</div>
             <div class="file-meta">
               <p class="file-label">Готово к обработке</p>
               <p id="file-name" class="file-name"></p>
@@ -73,13 +89,14 @@
           <div class="actions">
             <button id="btn-process" class="btn primary" type="button">
               <span>Добавить интро</span>
-              <kbd class="kbd">Enter</kbd>
+              <span class="btn-chip"><kbd class="kbd">↵</kbd></span>
             </button>
             <button id="btn-clear" class="btn ghost" type="button">Другой файл</button>
           </div>
         </section>
 
         <section id="progress-panel" class="panel progress-panel" hidden>
+          <div class="tech-corners" aria-hidden="true"></div>
           <div class="progress-head">
             <div class="spinner" aria-hidden="true"></div>
             <div>
@@ -93,11 +110,12 @@
           </div>
           <div class="progress-footer">
             <p class="hint-key"><kbd class="kbd">Esc</kbd> — отмена</p>
-            <button id="btn-cancel" class="btn danger ghost" type="button">Отменить</button>
+            <button id="btn-cancel" class="btn ghost danger" type="button">Отменить</button>
           </div>
         </section>
 
         <section id="result-panel" class="panel result-panel" hidden>
+          <div class="tech-corners" aria-hidden="true"></div>
           <div class="result-banner">
             <div class="result-check" aria-hidden="true">✓</div>
             <div>
@@ -107,7 +125,10 @@
           </div>
           <p id="result-path" class="result-path"></p>
           <div class="actions">
-            <button id="btn-open" class="btn primary" type="button">Показать в папке</button>
+            <button id="btn-open" class="btn primary" type="button">
+              <span>Показать в папке</span>
+              <span class="btn-chip" aria-hidden="true">→</span>
+            </button>
             <button id="btn-again" class="btn ghost" type="button">Ещё видео</button>
           </div>
         </section>

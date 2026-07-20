@@ -37,7 +37,7 @@ function createWindow() {
     minWidth: 520,
     minHeight: 560,
     title: 'ART France Intro',
-    backgroundColor: '#0b1016',
+    backgroundColor: '#000518',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
