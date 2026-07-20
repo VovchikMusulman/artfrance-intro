@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ART France Intro</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+      <div class="grain"></div>
+    </div>
+
+    <main class="app">
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="brand">ART France</p>
+          <p class="brand-sub">Intro Studio</p>
+        </div>
+        <div class="status-pills" id="status-pills" aria-live="polite">
+          <span class="pill" id="pill-ffmpeg" data-state="unknown">Движок</span>
+          <span class="pill" id="pill-intro" data-state="unknown">Интро</span>
+        </div>
+      </header>
+
+      <div class="hero">
+        <h1 id="headline">Добавить интро</h1>
+        <p id="subtitle" class="subtitle">Одно действие — корпоративное начало у любого ролика</p>
+      </div>
+
+      <nav class="steps" aria-label="Этапы">
+        <div class="step is-active" data-step="drop"><span>01</span> Файл</div>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step" data-step="file"><span>02</span> Проверка</div>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step" data-step="progress"><span>03</span> Склейка</div>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step" data-step="result"><span>04</span> Готово</div>
+      </nav>
+
+      <div class="stage">
+        <section id="dropzone" class="panel dropzone is-visible" tabindex="0" role="button" aria-label="Выбрать видео">
+          <div class="frame-corners" aria-hidden="true"></div>
+          <div class="dropzone-inner">
+            <div class="icon-ring">
+              <svg width="28" height="28" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <path d="M20 8v18M20 8l-6.5 6.5M20 8l6.5 6.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 29v2.5A2.5 2.5 0 0011.5 34h17a2.5 2.5 0 002.5-2.5V29" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="drop-title">Перетащите видео сюда</p>
+            <p class="drop-hint">или нажмите · MP4, MOV, MKV, WEBM</p>
+            <button id="btn-browse" class="btn ghost compact" type="button">Выбрать файл</button>
+          </div>
+        </section>
+
+        <section id="file-panel" class="panel file-panel" hidden>
+          <div class="file-card">
+            <div class="file-glyph" aria-hidden="true">▶</div>
+            <div class="file-meta">
+              <p class="file-label">Готово к обработке</p>
+              <p id="file-name" class="file-name"></p>
+              <p id="file-path" class="file-path"></p>
+            </div>
+            <span id="file-ext" class="ext-badge">MP4</span>
+          </div>
+          <div class="actions">
+            <button id="btn-process" class="btn primary" type="button">
+              <span>Добавить интро</span>
+              <kbd class="kbd">Enter</kbd>
+            </button>
+            <button id="btn-clear" class="btn ghost" type="button">Другой файл</button>
+          </div>
+        </section>
+
+        <section id="progress-panel" class="panel progress-panel" hidden>
+          <div class="progress-head">
+            <div class="spinner" aria-hidden="true"></div>
+            <div>
+              <p id="progress-message" class="progress-message">Обработка…</p>
+              <p class="progress-note">Можно отменить в любой момент</p>
+            </div>
+            <p id="progress-percent" class="progress-percent">0%</p>
+          </div>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-wrap">
+            <div id="progress-bar" class="bar-fill"></div>
+          </div>
+          <div class="progress-footer">
+            <p class="hint-key"><kbd class="kbd">Esc</kbd> — отмена</p>
+            <button id="btn-cancel" class="btn danger ghost" type="button">Отменить</button>
+          </div>
+        </section>
+
+        <section id="result-panel" class="panel result-panel" hidden>
+          <div class="result-banner">
+            <div class="result-check" aria-hidden="true">✓</div>
+            <div>
+              <p class="result-ok">Интро добавлено</p>
+              <p class="result-note">Файл сохранён рядом с исходником</p>
+            </div>
+          </div>
+          <p id="result-path" class="result-path"></p>
+          <div class="actions">
+            <button id="btn-open" class="btn primary" type="button">Показать в папке</button>
+            <button id="btn-again" class="btn ghost" type="button">Ещё видео</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="toast" class="toast" hidden role="status"></div>
+      <p id="error-line" class="error-line" hidden></p>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
