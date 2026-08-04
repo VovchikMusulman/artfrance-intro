@@ -1,15 +1,14 @@
-# ART France Intro
+# ART France — Intro
 
-Windows-приложение: добавляет корпоративное интро в начало видео.  
-FFmpeg встроен — сотрудникам ничего устанавливать не нужно.
+Windows-приложение: добавляет корпоративное интро ART France в начало видео. FFmpeg уже внутри — сотрудникам ничего устанавливать не нужно.
 
 ## Для сотрудников
 
-Скачайте `.exe` из [Releases](../../releases) и запустите двойным кликом.
+1. Скачайте **`ART-France-Intro-1.0.1-portable.exe`** из [Releases](https://github.com/VovchikMusulman/artfrance-intro/releases)
+2. Запустите файл двойным кликом (установка не нужна)
+3. Выберите видео — готовый файл сохранится рядом: `имя_with_intro.mp4`
 
-Готовый файл сохраняется рядом с исходником: `имя_with_intro.mp4`.
-
-## Для разработки
+## Для разработчиков
 
 ```bash
 npm install
@@ -23,4 +22,4 @@ npm start
 npm run dist
 ```
 
-Результат: `dist/ART-France-Intro-*-portable.exe`
+Готовый файл: `dist/ART-France-Intro-*-portable.exe`
