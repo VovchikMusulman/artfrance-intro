@@ -1,6 +1,6 @@
 {
   "name": "artfrance-intro",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Добавляет корпоративное интро в начало видео",
   "main": "src/main.js",
   "author": "ART France",

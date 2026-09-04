@@ -16,6 +16,25 @@ const subtitle = document.getElementById('subtitle');
 const toastEl = document.getElementById('toast');
 const pillFfmpeg = document.getElementById('pill-ffmpeg');
 const pillIntro = document.getElementById('pill-intro');
+const videoSpeed = document.getElementById('video-speed');
+const videoCompression = document.getElementById('video-compression');
+const compressionLabel = document.getElementById('compression-label');
+const estimateBox = document.getElementById('size-estimate');
+const estimateStatus = document.getElementById('estimate-status');
+const estimateValue = document.getElementById('estimate-value');
+const estimateSpinner = document.getElementById('estimate-spinner');
+const estimateProgress = document.getElementById('estimate-progress');
+const estimateRetry = document.getElementById('btn-estimate-retry');
+const resultSize = document.getElementById('result-size');
+
+function updateCompressionLabel() {
+  const crf = Number(videoCompression.value);
+  const level = crf === 18 ? 'Слабое · текущее качество' : crf <= 22 ? 'Слабое' : crf <= 27 ? 'Среднее' : 'Сильное · ниже качество';
+  compressionLabel.textContent = level;
+  videoCompression.setAttribute('aria-valuetext', level);
+}
+videoCompression.addEventListener('input', updateCompressionLabel);
+updateCompressionLabel();
 
 const btnProcess = document.getElementById('btn-process');
 const btnClear = document.getElementById('btn-clear');
@@ -38,7 +57,7 @@ const copyByView = {
   },
   file: {
     title: 'Файл выбран',
-    subtitle: 'Проверьте имя и нажмите «Добавить интро»',
+    subtitle: 'Выберите скорость и сжатие, затем добавьте интро',
   },
   progress: {
     title: 'Идёт склейка',
@@ -57,6 +76,64 @@ let cancelling = false;
 let currentView = 'drop';
 let toastTimer = null;
 let dragDepth = 0;
+let estimateTimer = null;
+let estimateRequestId = 0;
+
+function formatBytes(bytes) {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1024 ? `${(mb / 1024).toFixed(2)} ГБ` : `${mb.toFixed(1)} МБ`;
+}
+
+function stopEstimate() {
+  clearTimeout(estimateTimer);
+  estimateRequestId += 1;
+  window.api.cancelEstimate().catch(() => {});
+}
+
+function setEstimating(on) {
+  estimateBox.setAttribute('aria-busy', String(on));
+  estimateSpinner.hidden = !on;
+  estimateProgress.hidden = !on;
+}
+
+function scheduleEstimate() {
+  stopEstimate();
+  if (!selectedPath || busy) return;
+  const requestId = estimateRequestId;
+  const inputPath = selectedPath;
+  const options = { speed: Number(videoSpeed.value), crf: Number(videoCompression.value) };
+  setEstimating(true);
+  estimateRetry.hidden = true;
+  estimateValue.textContent = '';
+  estimateProgress.value = 0;
+  estimateStatus.textContent = 'Подсчитываем размер… Подготовка';
+  // Debounce slider movements without leaving an old estimate visible.
+  estimateTimer = setTimeout(async () => {
+    try {
+      const result = await window.api.estimateSize(inputPath, options, requestId);
+      if (requestId !== estimateRequestId || busy) return;
+      estimateStatus.textContent = 'Оценка готова';
+      estimateValue.textContent = `Исходный: ${formatBytes(result.inputBytes)} → С интро: ≈ ${formatBytes(result.lowBytes)} – ${formatBytes(result.highBytes)}`;
+    } catch (err) {
+      if (requestId !== estimateRequestId || busy) return;
+      estimateStatus.textContent = 'Не удалось оценить размер';
+      estimateValue.textContent = err?.message || 'Можно продолжить без оценки.';
+      estimateRetry.hidden = false;
+    } finally {
+      if (requestId === estimateRequestId) setEstimating(false);
+    }
+  }, 450);
+}
+
+window.api.onEstimateProgress(data => {
+  if (data.requestId !== estimateRequestId || busy) return;
+  const percent = Math.max(0, Math.min(100, Math.round(data.percent || 0)));
+  estimateProgress.value = percent;
+  estimateStatus.textContent = `Подсчитываем размер… ${percent}% · ${data.message}`;
+});
+videoSpeed.addEventListener('change', scheduleEstimate);
+videoCompression.addEventListener('input', scheduleEstimate);
+estimateRetry.addEventListener('click', scheduleEstimate);
 
 function basename(filePath) {
   return String(filePath || '').split(/[/\\]/).pop() || filePath;
@@ -138,6 +215,7 @@ function selectFile(filePath) {
   fileExtEl.textContent = extension(filePath);
   showError('');
   setView('file');
+  scheduleEstimate();
 }
 
 function setPill(el, ok, okText, badText) {
@@ -165,6 +243,7 @@ function isCancelledError(err) {
 
 async function processSelected() {
   if (!selectedPath || busy) return;
+  stopEstimate();
   busy = true;
   cancelling = false;
   btnProcess.disabled = true;
@@ -187,9 +266,13 @@ async function processSelected() {
   });
 
   try {
-    const result = await window.api.processVideo(selectedPath);
+    const result = await window.api.processVideo(selectedPath, {
+      speed: Number(videoSpeed.value),
+      crf: Number(videoCompression.value),
+    });
     lastOutputPath = result.outputPath;
     resultPath.textContent = result.outputPath;
+    resultSize.textContent = `Фактический размер: ${formatBytes(result.outputBytes)}`;
     setView('result');
     showToast('Интро успешно добавлено');
   } catch (err) {
@@ -208,6 +291,7 @@ async function processSelected() {
     btnProcess.disabled = false;
     btnCancel.disabled = false;
     btnCancel.textContent = 'Отменить';
+    if (currentView === 'file') scheduleEstimate();
   }
 }
 
@@ -225,6 +309,7 @@ async function cancelSelected() {
 }
 
 function resetToDrop() {
+  stopEstimate();
   selectedPath = null;
   lastOutputPath = null;
   showError('');
@@ -296,6 +381,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === 'Enter' && currentView === 'file' && !busy && !e.repeat) {
     const tag = document.activeElement?.tagName;
+    if (tag === 'SELECT' || tag === 'INPUT') return;
     if (tag === 'BUTTON' && document.activeElement !== btnProcess) return;
     e.preventDefault();
     processSelected();

@@ -86,6 +86,36 @@
             </div>
             <span id="file-ext" class="ext-badge">MP4</span>
           </div>
+          <div class="video-settings">
+            <div class="setting-row">
+              <label for="video-speed">Скорость видео</label>
+              <select id="video-speed" aria-describedby="speed-hint">
+                <option value="1">1× — обычная</option>
+                <option value="1.25">1.25×</option>
+                <option value="1.5">1.5×</option>
+                <option value="1.75">1.75×</option>
+                <option value="2">2×</option>
+              </select>
+            </div>
+            <p class="setting-hint" id="speed-hint">Звук ускоряется без повышения голоса. Интро не меняется.</p>
+            <div class="setting-row">
+              <label for="video-compression">Сжатие видео</label>
+              <output id="compression-label" for="video-compression">Слабое · текущее качество</output>
+            </div>
+            <input id="video-compression" type="range" min="18" max="32" step="1" value="18" aria-describedby="compression-hint" />
+            <div class="range-labels"><span>Лучше качество</span><span>Меньше размер</span></div>
+            <p class="setting-hint" id="compression-hint">Только основной ролик. Размер зависит от содержания; уменьшение относительно исходника не гарантируется.</p>
+          </div>
+          <div class="size-estimate" id="size-estimate" aria-busy="false">
+            <div class="estimate-heading">
+              <span class="spinner estimate-spinner" id="estimate-spinner" hidden aria-hidden="true"></span>
+              <p id="estimate-status" role="status" aria-live="polite">Оценка размера</p>
+            </div>
+            <p id="estimate-value" class="estimate-value"></p>
+            <progress id="estimate-progress" max="100" value="0" aria-label="Прогресс подсчёта размера" hidden></progress>
+            <p class="setting-hint">Приблизительный размер с интро. Сложные сцены могут увеличить погрешность. Можно начать обработку, не дожидаясь оценки.</p>
+            <button id="btn-estimate-retry" class="btn ghost compact" type="button" hidden>Повторить подсчёт</button>
+          </div>
           <div class="actions">
             <button id="btn-process" class="btn primary" type="button">
               <span>Добавить интро</span>
@@ -124,6 +154,7 @@
             </div>
           </div>
           <p id="result-path" class="result-path"></p>
+          <p id="result-size" class="result-note"></p>
           <div class="actions">
             <button id="btn-open" class="btn primary" type="button">
               <span>Показать в папке</span>

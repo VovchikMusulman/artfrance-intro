@@ -2,6 +2,9 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const { validateOptions, clipFilters } = require('./video-options');
+const { SizeEstimator } = require('./size-estimator');
+const sizeEstimator = new SizeEstimator(() => getFfmpegPath(), () => getIntroPath());
 
 const VIDEO_EXTENSIONS = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v']);
 
@@ -33,7 +36,7 @@ function getIntroPath() {
 function createWindow() {
   const win = new BrowserWindow({
     width: 640,
-    height: 640,
+    height: 840,
     minWidth: 520,
     minHeight: 560,
     title: 'ART France Intro',
@@ -192,15 +195,16 @@ function removeIfExists(filePath) {
   }
 }
 
-async function normalizeClip(input, output, width, height, fps, hasAudio, onRatio) {
+async function normalizeClip(input, output, width, height, fps, hasAudio, onRatio, options) {
   throwIfCancelled();
-  const vf = `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps},format=yuv420p`;
+  const filters = clipFilters(width, height, fps, options);
+  const vf = filters.video;
   let duration = null;
 
   const report = (_chunk, full) => {
     if (!duration) duration = parseDurationSeconds(full);
     const time = parseTimeSeconds(_chunk);
-    if (duration && time != null) onRatio(Math.min(1, time / duration));
+    if (duration && time != null) onRatio(Math.min(1, time * filters.speed / duration));
   };
 
   if (hasAudio) {
@@ -211,12 +215,18 @@ async function normalizeClip(input, output, width, height, fps, hasAudio, onRati
         input,
         '-vf',
         vf,
+        '-af',
+        filters.audio,
+        '-map',
+        '0:v:0',
+        '-map',
+        '0:a:0',
         '-c:v',
         'libx264',
         '-preset',
         'veryfast',
         '-crf',
-        '18',
+        filters.crf,
         '-c:a',
         'aac',
         '-ar',
@@ -248,7 +258,7 @@ async function normalizeClip(input, output, width, height, fps, hasAudio, onRati
       '-preset',
       'veryfast',
       '-crf',
-      '18',
+      filters.crf,
       '-c:a',
       'aac',
       '-shortest',
@@ -292,7 +302,18 @@ ipcMain.handle('cancel-process', async () => {
   return { cancelled: cancelActiveJob() };
 });
 
-ipcMain.handle('process-video', async (event, inputPath) => {
+ipcMain.handle('estimate-size', async (event, inputPath, options, requestId) => {
+  if (activeJob) throw new Error('Дождитесь завершения обработки видео.');
+  return sizeEstimator.estimate(inputPath, options, progress => {
+    if (!event.sender.isDestroyed()) event.sender.send('estimate-progress', { ...progress, requestId });
+  });
+});
+
+ipcMain.handle('cancel-estimate', () => sizeEstimator.cancel());
+
+ipcMain.handle('process-video', async (event, inputPath, rawOptions) => {
+  sizeEstimator.cancel();
+  const options = validateOptions(rawOptions);
   if (activeJob) {
     throw new Error('Уже идёт обработка. Сначала отмените её или дождитесь завершения.');
   }
@@ -349,7 +370,7 @@ ipcMain.handle('process-video', async (event, inputPath) => {
     send({ percent: 40, message: 'Обработка видео…' });
     await normalizeClip(inputPath, mainNorm, width, height, fps, main.hasAudio, (t) => {
       send({ percent: 40 + Math.round(t * 40), message: 'Обработка видео…' });
-    });
+    }, options);
     throwIfCancelled();
 
     const toConcatPath = (p) => p.replace(/\\/g, '/').replace(/'/g, "'\\''");
@@ -366,7 +387,7 @@ ipcMain.handle('process-video', async (event, inputPath) => {
     throwIfCancelled();
 
     send({ percent: 100, message: 'Готово' });
-    return { outputPath };
+    return { outputPath, outputBytes: fs.statSync(outputPath).size };
   } catch (err) {
     removeIfExists(outputPath);
     if (err instanceof CancelledError || err?.code === 'CANCELLED') {
@@ -388,6 +409,7 @@ ipcMain.handle('process-video', async (event, inputPath) => {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
+  sizeEstimator.cancel();
   cancelActiveJob();
   if (process.platform !== 'darwin') app.quit();
 });
